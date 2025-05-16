@@ -1,0 +1,35 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Lint Python code with pylint
+      run: |
+        pip install pylint
+        pylint app.py test_app.py
+
+    - name: Lint Dockerfile with hadolint
+      uses: hadolint/hadolint-action@v2
+      with:
+        dockerfile: Dockerfile
+
+    - name: Run unit tests
+      run: python3 -m unittest discover -s . -p 'test_*.py'
+
+    - name: Build Docker image
+      run: docker build -t hivebox-app .
